@@ -9,14 +9,12 @@
 #include <SPI.h>
 #include <nRF24L01.h>
 #include <RF24.h>
-#define button 3
 #define led 2
 RF24 radio(7, 8); // CE, CSN
 const byte addresses[][6] = {"00001", "00002"};
 boolean buttonState = 0;
-boolean button1State = 0;
 void setup() {
-  pinMode(button, INPUT);
+  Serial.begin(9600);
   pinMode(2, OUTPUT);
   radio.begin();
   radio.openWritingPipe(addresses[1]); // 00001
@@ -24,22 +22,23 @@ void setup() {
   radio.setPALevel(RF24_PA_MIN);
 }
 void loop() {
+  if (radio.available()) {
+  char text[32] = "";
+  radio.read(&text, sizeof(text));
+  Serial.println(text);
   delay(5);
   radio.stopListening();
-  buttonState = digitalRead(button);
-  radio.write(&buttonState, sizeof(buttonState));
-  
+  int potValue = analogRead(A0);
+  int angleValue = map(potValue, 0, 1023, 0, 180);
+  radio.write(&angleValue, sizeof(angleValue));
   delay(5);
   radio.startListening();
   while (!radio.available());
-  radio.read(&button1State, sizeof(button1State));
-  if (button1State == HIGH) {
+  radio.read(&buttonState, sizeof(buttonState));
+  if (buttonState == HIGH) {
     digitalWrite(led, HIGH);
   }
   else {
     digitalWrite(led, LOW);
   }
-}
-//  int potValue = analogRead(A0);
-//  int angleValue = map(potValue, 0, 1023, 0, 180);
-//  radio.write(&angleValue, sizeof(angleValue));
+}}
