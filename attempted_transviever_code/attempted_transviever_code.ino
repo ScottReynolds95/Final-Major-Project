@@ -28,22 +28,12 @@
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 
+int16_t packetnum = 0;  // packet counter, we increment per xmission
 void setup() 
 {
   delay(500);
   Serial.begin(115200);
   //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
-
-  // Initialize OLED display
-  oled.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
-  oled.display();
-  delay(500);
-  oled.clearDisplay();
-  oled.display();
-
-  pinMode(BUTTON_A, INPUT_PULLUP);
-  pinMode(BUTTON_B, INPUT_PULLUP);
-  pinMode(BUTTON_C, INPUT_PULLUP);
 
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
@@ -81,17 +71,6 @@ void setup()
   pinMode(LED, OUTPUT);
 
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
-
-  // OLED text display tests
-  oled.setTextSize(2);
-  oled.setTextColor(WHITE);
-  oled.setCursor(0,0);
-  oled.println("RFM69 @ ");
-  oled.print((int)RF69_FREQ);
-  oled.println(" MHz");
-  oled.display();
-
-  delay(500);
 }
 
 
@@ -105,34 +84,40 @@ void loop()
       Serial.println("Receive failed");
       return;
     }
-    digitalWrite(LED, HIGH);
+    Blink(LED, 50, 3);
     rf69.printBuffer("Received: ", buf, len);
     buf[len] = 0;
     
     Serial.print("Got: "); Serial.println((char*)buf);
     Serial.print("RSSI: "); Serial.println(rf69.lastRssi(), DEC);
 
-    oled.clearDisplay();
-    oled.setCursor(0,0);
-    oled.println((char*)buf);
-    oled.print("RSSI: "); oled.print(rf69.lastRssi());
-    oled.display(); 
-    digitalWrite(LED, LOW);
   }
 
-  if (!digitalRead(BUTTON_A) || !digitalRead(BUTTON_B) || !digitalRead(BUTTON_C))
-  {
-    Serial.println("Button pressed!");
-    
-    char radiopacket[20] = "Button #";
-    if (!digitalRead(BUTTON_A)) radiopacket[8] = 'A';
-    if (!digitalRead(BUTTON_B)) radiopacket[8] = 'B';
-    if (!digitalRead(BUTTON_C)) radiopacket[8] = 'C';
-    radiopacket[9] = 0;
-
+    char radiopacket[20] = "Hello World #";
+    itoa(packetnum++, radiopacket+13, 10);
     Serial.print("Sending "); Serial.println(radiopacket);
+  
+  // Send a message!
     rf69.send((uint8_t *)radiopacket, strlen(radiopacket));
     rf69.waitPacketSent();
+
+}    
+//    char radiopacket[20] = "Button #";
+//    if (!digitalRead(BUTTON_A)) radiopacket[8] = 'A';
+//    if (!digitalRead(BUTTON_B)) radiopacket[8] = 'B';
+//    if (!digitalRead(BUTTON_C)) radiopacket[8] = 'C';
+//    radiopacket[9] = 0;
+//
+//    Serial.print("Sending "); Serial.println(radiopacket);
+//    rf69.send((uint8_t *)radiopacket, strlen(radiopacket));
+//    rf69.waitPacketSent();
+void Blink(byte PIN, byte DELAY_MS, byte loops) {
+  for (byte i=0; i<loops; i++)  {
+    digitalWrite(PIN,HIGH);
+    delay(DELAY_MS);
+    digitalWrite(PIN,LOW);
+    delay(DELAY_MS);
   }
 }
+
 
