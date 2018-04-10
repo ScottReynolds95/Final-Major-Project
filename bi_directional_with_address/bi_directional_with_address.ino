@@ -21,11 +21,6 @@
 // change addresses for each client board, any number :)
 #define MY_ADDRESS     2
 
-/************ OLED Setup ***************/
-Adafruit_SSD1306 oled = Adafruit_SSD1306();
-
-
-
 /************ Radio Setup ***************/
 
 // Change to 434.0 or other frequency, must match RX's freq!
@@ -51,17 +46,6 @@ void setup()
   delay(500);
   Serial.begin(115200);
   //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
-
-  // Initialize OLED display
-  oled.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
-  oled.display();
-  delay(500);
-  oled.clearDisplay();
-  oled.display();
-
-  pinMode(BUTTON_A, INPUT_PULLUP);
-  pinMode(BUTTON_B, INPUT_PULLUP);
-  pinMode(BUTTON_C, INPUT_PULLUP);
 
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
@@ -95,16 +79,7 @@ void setup()
 
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 
-  // OLED text display tests
-  oled.setTextSize(2);
-  oled.setTextColor(WHITE);
-  oled.setCursor(0,0);
-  oled.println("RFM69 @ ");
-  oled.print((int)RF69_FREQ);
-  oled.println(" MHz");
-  oled.display();
 
-  delay(500);
 }
 
 // Dont put this on the stack:
@@ -178,4 +153,5 @@ void loop()
     }
   }
 }
+
 
