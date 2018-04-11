@@ -17,7 +17,7 @@
 #define DEST_ADDRESS   255
 
 // change addresses for each client board, any number :)
-#define MY_ADDRESS     3
+#define MY_ADDRESS     4
 
 
 
@@ -109,7 +109,7 @@ void loop()
     }
   }
 
-    delay(1000);  // Wait 5 second between transmits, could also 'sleep' here!
+    delay(5000);  // Wait 5 second between transmits, could also 'sleep' here!
    
     char radiopacket[20] = "Hello World #";
     itoa(packetnum++, radiopacket+13, 10);
