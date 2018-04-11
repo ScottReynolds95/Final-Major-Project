@@ -14,13 +14,12 @@
 #include <RH_RF69.h>
 
 // Where to send packets to!
-#define DEST_ADDRESS   1
+#define DEST_ADDRESS   255
 
 // change addresses for each client board, any number :)
-#define MY_ADDRESS     2
+#define MY_ADDRESS     3
 
-/************ OLED Setup ***************/
-Adafruit_SSD1306 oled = Adafruit_SSD1306();
+
 
 /************ Radio Setup ***************/
 
@@ -32,6 +31,7 @@ Adafruit_SSD1306 oled = Adafruit_SSD1306();
   #define RFM69_INT     3  // 
   #define RFM69_CS      4  //
   #define RFM69_RST     2  // "A"
+  #define LED           8 
 #endif
 
 // Singleton instance of the radio driver
@@ -109,12 +109,13 @@ void loop()
     }
   }
 
-    delay(5000);  // Wait 5 second between transmits, could also 'sleep' here!
+    delay(1000);  // Wait 5 second between transmits, could also 'sleep' here!
    
     char radiopacket[20] = "Hello World #";
     itoa(packetnum++, radiopacket+13, 10);
     Serial.print("Sending "); Serial.println(radiopacket);
 
+    
     if (rf69_manager.sendtoWait((uint8_t *)radiopacket, strlen(radiopacket), DEST_ADDRESS)) {
       // Now wait for a reply from the server
       uint8_t len = sizeof(buf);
