@@ -21,12 +21,20 @@
 #define MY_ADDRESS     1
 
 
-#if defined (__AVR_ATmega328P__)  // Feather 328P w/wing
+//#if defined (__AVR_ATmega328P__)  // Feather 328P w/wing
+//  #define RFM69_INT     3  // 
+//  #define RFM69_CS      4  //
+//  #define RFM69_RST     2  // "A"
+//  #define LED           8
+//#endif
+
+#if defined (__AVR_ATmega328P__)  // trinket
   #define RFM69_INT     3  // 
-  #define RFM69_CS      4  //
-  #define RFM69_RST     2  // "A"
+  #define RFM69_CS      5  //
+  #define RFM69_RST     4  // "A"
   #define LED           8
 #endif
+
 
 
 

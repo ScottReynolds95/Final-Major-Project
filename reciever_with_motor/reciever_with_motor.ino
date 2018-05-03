@@ -11,35 +11,40 @@
 #include <SPI.h>
 #include <RH_RF69.h>
 #include <RHReliableDatagram.h>
+#include <Wire.h>
+#include "Adafruit_DRV2605.h"
 /************ Radio Setup ***************/
 
 // Change to 434.0 or other frequency, must match RX's freq!
 #define RF69_FREQ 915.0
 
-// Where to send packets to!
-#define DEST_ADDRESS   1
-// change addresses for each client board, any number :)
-#define MY_ADDRESS     2
+// who am i? (server address)
+#define MY_ADDRESS     1
 
-#if defined (__AVR_ATmega328P__)  // Feather 328P w/wing
+
+//#if defined (__AVR_ATmega328P__)  // Feather 328P w/wing
+//  #define RFM69_INT     3  // 
+//  #define RFM69_CS      4  //
+//  #define RFM69_RST     2  // "A"
+//  #define LED           8
+//#endif
+
+#if defined (__AVR_ATmega328P__)  // trinket
   #define RFM69_INT     3  // 
-  #define RFM69_CS      4  //
-  #define RFM69_RST     2  // "A"
+  #define RFM69_CS      5  //
+  #define RFM69_RST     4  // "A"
   #define LED           8
 #endif
 
-//#if defined (__AVR_ATmega328P__)  // trinket
-//  #define RFM69_INT     3  // 
-//  #define RFM69_CS      5  //
-//  #define RFM69_RST     4  // "A"
-//  #define LED           13
-//#endif
+
+Adafruit_DRV2605 drv; // motor driver
 
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 
 // Class to manage message delivery and receipt, using the driver declared above
 RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
+
 
 int16_t packetnum = 0;  // packet counter, we increment per xmission
 
@@ -48,11 +53,20 @@ void setup()
   Serial.begin(115200);
   //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
 
+  drv.begin();
+  
+  drv.selectLibrary(1);
+  
+  // I2C trigger by sending 'go' command 
+  // default, internal trigger when sending GO command
+  drv.setMode(DRV2605_MODE_INTTRIG); 
+
+  
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
-  Serial.println("Feather Addressed RFM69 TX Test!");
+  Serial.println("Feather Addressed RFM69 RX Test!");
   Serial.println();
 
   // manual reset
@@ -88,43 +102,50 @@ void setup()
 
 
 // Dont put this on the stack:
+uint8_t data[] = "And hello back to you";
+// Dont put this on the stack:
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
-uint8_t data[] = "  OK";
+
+uint8_t effect = 70;// motor effect
 
 void loop() {
-  delay(5000);  // Wait 5 second between transmits, could also 'sleep' here!
-
-  char radiopacket[20] = "Hello World #";
-  itoa(packetnum++, radiopacket+13, 10);
-  Serial.print("Sending "); Serial.println(radiopacket);
-  
-  // Send a message to the DESTINATION!
-  if (rf69_manager.sendtoWait((uint8_t *)radiopacket, strlen(radiopacket), DEST_ADDRESS)) {
-    // Now wait for a reply from the server
+  if (rf69_manager.available())
+  {
+    // Wait for a message addressed to us from the client
     uint8_t len = sizeof(buf);
-    uint8_t from;   
-    if (rf69_manager.recvfromAckTimeout(buf, &len, 2000, &from)) {
+    uint8_t from;
+    if (rf69_manager.recvfromAck(buf, &len, &from)) {
       buf[len] = 0; // zero out remaining string
       
-      Serial.print("Got reply from #"); Serial.print(from);
+      Serial.print("Got packet from #"); Serial.print(from);
       Serial.print(" [RSSI :");
       Serial.print(rf69.lastRssi());
       Serial.print("] : ");
-      Serial.println((char*)buf);     
-      Blink(LED, 40, 3); //blink LED 3 times, 40ms between blinks
-    } else {
-      Serial.println("No reply, is anyone listening?");
+      Serial.println((char*)buf);
+
+      drv.setWaveform(0, effect);  // play effect 
+      drv.setWaveform(1, 0);       // end waveform
+
+  // play the effect!
+      drv.go();
+
+  // wait a bit
+  delay(1000);
+//      Blink(LED, 40, 3); //blink LED 3 times, 40ms between blinks
+
+      // Send a reply back to the originator client
+      if (!rf69_manager.sendtoWait(data, sizeof(data), from))
+        Serial.println("Sending failed (no ack)");
     }
-  } else {
-    Serial.println("Sending failed (no ack)");
   }
 }
 
-void Blink(byte PIN, byte DELAY_MS, byte loops) {
-  for (byte i=0; i<loops; i++)  {
-    digitalWrite(PIN,HIGH);
-    delay(DELAY_MS);
-    digitalWrite(PIN,LOW);
-    delay(DELAY_MS);
-  }
-}
+
+//void Blink(byte PIN, byte DELAY_MS, byte loops) {
+//  for (byte i=0; i<loops; i++)  {
+//    digitalWrite(PIN,HIGH);
+//    delay(DELAY_MS);
+//    digitalWrite(PIN,LOW);
+//    delay(DELAY_MS);
+//  }
+//}
