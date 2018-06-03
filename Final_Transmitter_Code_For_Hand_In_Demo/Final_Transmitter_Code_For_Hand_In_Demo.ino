@@ -1,4 +1,4 @@
-// This software is a manipualtion of the LowPowerLab's RFM69 recomended on the adafuit documention for the transceivers
+//This software is a manipulation of the LowPowerLab's RFM69 recommended on the Adafruit documentation for the transceivers
 // found at https://learn.adafruit.com/adafruit-rfm69hcw-and-rfm96-rfm95-rfm98-lora-packet-padio-breakouts/using-the-rfm69-radio
 // I also used example code from the Adafruit_DRV2605 Library to control the haptic driver
 // found at https://learn.adafruit.com/adafruit-drv2605-haptic-controller-breakout/arduino-code#
